@@ -18,4 +18,4 @@ if response.status_code == 200:
 else:
     print(f"Error: {response.status_code}")
 
-print(df_league_entries.head())
+print(df_matches.head())
