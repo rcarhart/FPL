@@ -12,6 +12,18 @@ df_completed_matches.rename(columns={
     "league_entry_2_points": "team2Points"},
                             inplace=True)
 df_completed_matches.drop(columns=["winning_method", "winning_league_entry","started"], inplace=True)
+
 df_completed_matches['match_id'] = range(1, len(df_completed_matches) + 1)
 
-print(df_completed_matches)
+# Transform the data
+team1 = df_completed_matches.loc[:, ["gameweek", "finished", "team1", "team1Points", "match_id"]].rename(
+    columns={"team1": "team", "team1Points": "points"}
+)
+team2 = df_completed_matches.loc[:, ["gameweek", "finished", "team2", "team2Points", "match_id"]].rename(
+    columns={"team2": "team", "team2Points": "points"}
+)
+
+# Combine into a single normalized DataFrame
+df_normalized_matches = pd.concat([team1, team2], ignore_index=True)
+df_normalized_matches.sort_values(by=["gameweek", "match_id"], inplace=True)
+
