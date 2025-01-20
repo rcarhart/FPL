@@ -3,27 +3,55 @@ services:
     image: postgres:17-alpine
     container_name: fpl-postgres
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: 'postgres'
+      POSTGRES_PASSWORD: 'postgres'
+      POSTGRES_DB: 'FPL'
     ports:
       - '5432:5432'
     volumes:
-      - fpl-db-data:/var/lib/postgresql/data
+      - vol-fpl-pgdata:/var/lib/postgresql/data
     networks:
-      - fpl-network
-    env_file:
-      - .env
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      - pg-fpl
+    restart: on-failure
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: fpl-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: 'admin@admin.com'  # Change to your preferred email
+      PGADMIN_DEFAULT_PASSWORD: 'admin'          # Change to your preferred password
+    ports:
+      - '8080:80'  # Port mapping for accessing pgAdmin
+    volumes:
+      - vol-fpl-pgadmin:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    networks:
+      - pg-fpl
+    restart: always
+
+  web:
+    build: .
+    container_name: fpl-app
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_PORT: ${DB_PORT}
+    volumes:
+      - .:/app
+    networks:
+      - pg-fpl
+    depends_on:
+      - postgres
+    command: python3 main.py  # Adjust this based on how you run the project
     restart: on-failure
 
 volumes:
-  fpl-db-data:
+  vol-fpl-pgdata:
+  vol-fpl-pgadmin:
 
 networks:
-  fpl-network:
+  pg-fpl:
     driver: bridge
